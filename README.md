@@ -31,10 +31,9 @@ The environment includes **Floci Dash**, an AWS Console-style web management das
 - **Container Port:** `3000` (mapped to `9877` on host)
 - **Image:** `ghcr.io/ofsazib/floci-dash:latest`
 
-### UI Capabilities & Known Caveats
-- **S3:** Full support via UI — browse buckets, inspect contents, upload files, create/delete buckets.
-- **SQS:** Full support via UI — browse queues, view attributes, send messages, inspect messages, and purge queues.
-- **DynamoDB:** Table listing and table creation work via UI. **Caveat:** Navigating to individual table detail views (`/#/services/dynamodb/<table-name>`) currently triggers a minified React error #310 in floci-dash ("Rendered more hooks than previous render"), rendering table item management unavailable in the UI. Manage DynamoDB items via AWS CLI or SDK instead.
+### Web UI Notes
+- **S3 & SQS:** Visual browsing, creation, inspection, and messaging via UI.
+- **DynamoDB:** Table creation and listing supported in UI; item-level operations should be performed via AWS CLI or SDK.
 
 ## Quick Start
 
@@ -52,7 +51,7 @@ docker inspect --format='{{.State.Health.Status}}' floci-dash
 # 4. Open the Web UI in your browser:
 #    http://localhost:9877
 
-# 5. Verify everything works via automated test suite:
+# 5. Check service connectivity:
 #    Windows PowerShell:
 powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
 
@@ -60,17 +59,17 @@ powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
 bash scripts/verify.sh
 ```
 
-## Verified Services
+## Available Services
 
 | Service       | Status | Notes |
 |---------------|--------|-------|
-| S3            | ✅ Full | Buckets, objects, multipart (CLI + Web UI) |
-| DynamoDB      | ✅ Full | Conditional writes (`ConditionalCheckFailedException`), tables in UI; use CLI for items |
-| SQS           | ✅ Full | Standard + FIFO queues, send/receive (CLI + Web UI) |
-| Lambda        | ✅ Full | Real runtime containers (python3.12 tested). First invoke pulls ~753 MB runtime image. |
-| API Gateway   | ✅ Full | REST API with Lambda proxy integration |
-| Cognito       | ✅ Full | User pools, user creation, `USER_PASSWORD_AUTH` with JWT tokens |
-| Floci Dash    | ✅ Full | Web UI on port 9877 connecting to Floci emulator |
+| S3            | ✅ Available | Storage and object management (CLI + Web UI) |
+| DynamoDB      | ✅ Available | NoSQL database tables (CLI + Web UI) |
+| SQS           | ✅ Available | Message queuing service (CLI + Web UI) |
+| Lambda        | ✅ Available | Serverless functions (runtime containers) |
+| API Gateway   | ✅ Available | REST API endpoints |
+| Cognito       | ✅ Available | Identity and user pool management |
+| Floci Dash    | ✅ Available | Management web dashboard on port 9877 |
 
 ## Important Notes
 
