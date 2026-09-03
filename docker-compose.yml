@@ -8,14 +8,14 @@ services:
       - AWS_DEFAULT_REGION=us-east-1
       - FLOCI_DOCKER_FLAGS=--network=floci-challenge_default
     volumes:
-      - ./data:/var/lib/floci
+      - ./data:/app/data
       - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:4566/_floci/health"]
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:4566/_localstack/health || curl -sf http://127.0.0.1:4566/_floci/health || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
     restart: unless-stopped
 
   floci-dash:
@@ -29,9 +29,9 @@ services:
       floci:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/healthz"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/healthz"]
       interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 10s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
     restart: unless-stopped
