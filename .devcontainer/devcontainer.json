@@ -1,0 +1,19 @@
+{
+  "name": "Floci Local Cloud",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "floci",
+  "workspaceFolder": "/workspaces/floci-challenge",
+  "remoteUser": "root",
+  "forwardPorts": [4566, 9877],
+  "portsAttributes": {
+    "9877": {
+      "label": "Floci Dash Web UI",
+      "onAutoForward": "openBrowser"
+    },
+    "4566": {
+      "label": "Floci AWS Endpoint",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "sh -c 'if ! command -v tar >/dev/null 2>&1; then microdnf install -y tar git unzip zip python3; fi && if ! command -v aws >/dev/null 2>&1; then curl -s \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\" && unzip -q awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip; fi && bash scripts/verify.sh'"
+}

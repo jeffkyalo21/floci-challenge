@@ -1,0 +1,37 @@
+services:
+  floci:
+    image: floci/floci:latest
+    container_name: floci
+    ports:
+      - "4566:4566"
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - FLOCI_DOCKER_FLAGS=--network=floci-challenge_default
+    volumes:
+      - ./data:/var/lib/floci
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:4566/_floci/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  floci-dash:
+    image: ghcr.io/ofsazib/floci-dash:latest
+    container_name: floci-dash
+    ports:
+      - "9877:3000"
+    environment:
+      - FLOCI_URL=http://floci:4566
+    depends_on:
+      floci:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
