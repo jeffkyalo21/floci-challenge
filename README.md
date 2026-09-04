@@ -1,132 +1,194 @@
-# Floci Challenge — Local AWS Emulator Environment
+# Floci Challenge — Setup Guide
 
-> **Floci** is a free, open-source local AWS emulator that runs 90+ AWS services on a single port (4566).
+This guide walks you through setting up your local AWS environment for the
+AWS Architecture Challenge. Follow the steps in order. Do this **before**
+event day — you don't want to spend your build time installing software.
 
-## Run in GitHub Codespaces (Zero Install / In-Browser)
-
-Students and participants can launch and use this entire environment directly in their web browser without installing Docker locally:
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/jeffkyalo21/floci-challenge)
-
-1. Open the repository on GitHub: [https://github.com/jeffkyalo21/floci-challenge](https://github.com/jeffkyalo21/floci-challenge)
-2. Click **Code** > **Codespaces** > **Create codespace on main**
-3. Codespaces automatically builds the environment, starts Floci and Floci Dash, and forwards the ports.
-4. The **Floci Dash Web UI** (port 9877) will automatically open in a browser preview tab.
+> **Floci** is a free, local AWS emulator. It runs real AWS-compatible
+> services (S3, DynamoDB, SQS, Lambda, API Gateway, Cognito) on your own
+> laptop — no AWS account, no credit card, no internet dependency once set up.
 
 ---
 
-## Local Prerequisites
+## Step 1: Install Docker Desktop
 
-| Tool           | Version Tested | Required |
-|----------------|---------------|----------|
-| Docker Desktop | 4.88+         | ✅       |
-| AWS CLI v2     | 2.36+         | ✅       |
-| PowerShell 5+  | 5.1+          | ✅ (Windows) |
+1. Go to [https://docs.docker.com/desktop/](https://docs.docker.com/desktop/)
+2. Download Docker Desktop for your operating system (Windows/Mac/Linux)
+3. Run the installer
+   - **Windows:** the installer will prompt you to enable WSL 2 if it isn't
+     already — follow its instructions and restart if asked
+4. Launch Docker Desktop from your Start Menu / Applications
+5. Wait until it shows **"Engine running"** — this can take a minute on first launch
 
-## Web UI — Floci Dash
+**Check it worked** — open a terminal (PowerShell on Windows, Terminal on
+Mac/Linux) and run:
+```bash
+docker version
+docker compose version
+```
+Both commands should print version numbers, not an error.
 
-The environment includes **Floci Dash**, an AWS Console-style web management dashboard built with AWS Cloudscape Design System.
-
-- **URL:** [http://localhost:9877](http://localhost:9877)
-- **Container Port:** `3000` (mapped to `9877` on host)
-- **Image:** `ghcr.io/ofsazib/floci-dash:latest`
-
-### Web UI Notes
-- **S3 & SQS:** Visual browsing, creation, inspection, and messaging via UI.
-- **DynamoDB:** Table creation and listing supported in UI; item-level operations should be performed via AWS CLI or SDK.
-
-## Quick Start
+---
+## Step 2: Clone the challenge repository
 
 ```bash
-# 1. Copy environment file
+git clone https://github.com/jeffkyalo21/floci-challenge.git
+cd floci-challenge
+```
+
+If you don't have `git` installed, download the repository as a ZIP from
+GitHub instead (green **Code** button → **Download ZIP**), then extract it
+and open a terminal in that folder.
+
+---
+
+## Step 3: Set up your environment file
+
+```bash
 cp .env.example .env
+```
 
-# 2. Start Floci and Floci Dash
+On Windows PowerShell, use:
+```powershell
+copy .env.example .env
+```
+
+You don't need to edit this file — it already contains working defaults.
+
+---
+
+## Step 4: Start the environment
+
+```bash
 docker compose up -d
+```
 
-# 3. Wait for containers to be healthy
+This downloads and starts two containers: **Floci** (the AWS emulator) and
+**Floci Dash** (a visual dashboard). The first run downloads images and can
+take a few minutes depending on your internet speed — this is normal.
+
+---
+## Step 5: Confirm both containers are healthy
+
+```bash
 docker inspect --format='{{.State.Health.Status}}' floci
 docker inspect --format='{{.State.Health.Status}}' floci-dash
+```
 
-# 4. Open the Web UI in your browser:
-#    http://localhost:9877
+Both should print `healthy`. If either says `starting`, wait 30 seconds and
+check again. If either says `unhealthy`, see **Troubleshooting** below.
 
-# 5. Check service connectivity:
-#    Windows PowerShell:
+---
+
+## Step 6: Run the verification script
+
+**Windows PowerShell:**
+```powershell
 powershell -ExecutionPolicy Bypass -File scripts/verify.ps1
+```
 
-#    Bash (WSL / Git Bash / macOS / Linux):
+**Mac / Linux / Git Bash / WSL:**
+```bash
 bash scripts/verify.sh
 ```
 
-## Available Services
+This confirms each AWS service (S3, DynamoDB, SQS, Lambda, API Gateway,
+Cognito) is reachable. You should see a confirmation line for each service.
 
-| Service       | Status | Notes |
-|---------------|--------|-------|
-| S3            | ✅ Available | Storage and object management (CLI + Web UI) |
-| DynamoDB      | ✅ Available | NoSQL database tables (CLI + Web UI) |
-| SQS           | ✅ Available | Message queuing service (CLI + Web UI) |
-| Lambda        | ✅ Available | Serverless functions (runtime containers) |
-| API Gateway   | ✅ Available | REST API endpoints |
-| Cognito       | ✅ Available | Identity and user pool management |
-| Floci Dash    | ✅ Available | Management web dashboard on port 9877 |
+---
 
-## Important Notes
+## Step 7: Open the dashboard
 
-### Lambda Runtime Images
-The first Lambda invocation pulls a real runtime container image from ECR public:
-- `public.ecr.aws/lambda/python:3.12` (~753 MB)
+Open your browser to:
 
-**Pre-cache this on your machine** before event day:
+**[http://localhost:9877](http://localhost:9877)**
+
+This is **Floci Dash** — a visual, AWS Console-style dashboard where you can
+see and manage the resources you create (buckets, tables, queues, functions)
+without needing the command line for everything.
+
+---
+## Step 8: (Recommended) Pre-download the Lambda runtime
+
+If your challenge design uses Lambda, the first invocation downloads a real
+runtime image (~753 MB). Avoid doing this for the first time during the
+event — run this now instead:
+
 ```bash
 docker pull public.ecr.aws/lambda/python:3.12
 ```
 
-### Docker Socket
-The `docker-compose.yml` mounts `/var/run/docker.sock` into the container. This is required for services that spin up real containers (Lambda, RDS, ECS, etc.).
+---
 
-### Persistence
-Data is stored in `./data/` via a bind mount. To reset all state:
+## You're ready
+
+At this point you have:
+- ✅ Docker running
+- ✅ Floci and Floci Dash containers healthy
+- ✅ All services verified reachable
+- ✅ The dashboard open at localhost:9877
+
+You're set up to start designing and building your architecture using the
+available services below.
+
+---
+
+## Available Services
+
+| Service       | Notes |
+|---------------|-------|
+| S3            | Storage and object management (CLI + Dashboard) |
+| DynamoDB      | NoSQL database tables (CLI + Dashboard) |
+| SQS           | Message queuing, standard and FIFO (CLI + Dashboard) |
+| Lambda        | Serverless functions (real runtime containers) |
+| API Gateway   | REST API endpoints |
+| Cognito       | Identity and user pool management |
+
+All services are reached through one endpoint: `http://localhost:4566`
+
+---
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| `Cannot connect to Docker daemon` | Docker Desktop isn't running — launch it and wait for "Engine running" |
+| A container says `unhealthy` | Run `docker logs floci` or `docker logs floci-dash` to see the actual error |
+| Lambda invoke hangs or times out | First run pulls a ~753 MB image — wait 1-2 minutes, or pre-pull it (Step 8) |
+| Port `4566` or `9877` already in use | Run `docker ps` to find what's using it, or stop the conflicting app |
+| `git` command not found | Download the repo as a ZIP from GitHub instead (see Step 2) |
+| Windows: install got stuck on WSL 2 | Restart your machine, then reopen Docker Desktop |
+| Verification script shows a failure | Re-run Step 5 to confirm both containers are healthy first |
+
+If none of these fix it, ask an event organizer for help before the build
+phase starts — don't lose your build time debugging setup issues alone.
+
+---
+
+## Resetting your environment
+
+If you want to wipe everything and start fresh:
+
 ```bash
 docker compose down
 rm -rf data/*
 docker compose up -d
 ```
 
-### Credentials
-Any non-empty credentials work. The `.env` uses `test`/`test`.
+On Windows PowerShell, replace `rm -rf data/*` with:
+```powershell
+Remove-Item -Recurse -Force data\*
+```
 
-## Disk Space
-
-| Component | Size |
-|-----------|------|
-| Floci image | ~565 MB |
-| Floci Dash image | ~280 MB |
-| Python 3.12 Lambda runtime | ~753 MB |
-| **Total minimum** | **~1.6 GB** |
-
-Ensure at least **5 GB free** for comfortable headroom (container layers, Lambda staging, etc.).
+---
 
 ## Project Structure
 
 ```
 floci-challenge/
 ├── docker-compose.yml   # Floci + Floci Dash container definitions
-├── .env.example         # Template credentials & UI URL (copy to .env)
-├── .env                 # Your local credentials (gitignored)
-├── data/                # Persistent Floci state (gitignored)
-│   └── .gitkeep
+├── .env.example         # Template credentials (copy to .env in Step 3)
+├── data/                # Your persistent state (gitignored)
 └── scripts/
-    ├── verify.sh        # Bash verification script (includes UI check)
-    └── verify.ps1       # PowerShell verification script (includes UI check)
+    ├── verify.sh        # Verification script (Mac/Linux/WSL)
+    └── verify.ps1       # Verification script (Windows)
 ```
-
-## Troubleshooting
-
-| Issue | Fix |
-|-------|-----|
-| `Cannot connect to Docker daemon` | Start Docker Desktop |
-| Lambda invoke hangs | First run pulls ~753 MB image — wait 1-2 min |
-| Port 4566 or 9877 in use | `docker ps` to find conflict, or change port in compose |
-| Health check fails | `docker logs floci` or `docker logs floci-dash` for startup errors |
-
